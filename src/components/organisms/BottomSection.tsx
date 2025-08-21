@@ -1,3 +1,4 @@
+// BottomSection.tsx
 // Last modified: 2025-08-18
 import React from 'react';
 import { View, StyleSheet, Dimensions } from 'react-native';
@@ -30,8 +31,8 @@ interface BottomSectionProps {
   
   // QR Code props
   slateId: string;
-
-
+  qrFullScreen?: boolean;
+  onQRFullScreenChange?: (value: boolean) => void;
 }
 
 /**
@@ -54,6 +55,8 @@ const BottomSection: React.FC<BottomSectionProps> = ({
   onLensInfoChange,
   onLutInfoChange,
   slateId,
+  qrFullScreen,
+  onQRFullScreenChange,
 }) => {
   return (
     <View style={styles.container}>
@@ -98,7 +101,15 @@ const BottomSection: React.FC<BottomSectionProps> = ({
 
       {/* Right side - QR Code (30% of remaining width) */}
       <View style={styles.qrContainer}>
-        <QRCodeBlock slateId={slateId} />
+        <QRCodeBlock 
+          slateId={slateId}
+          isFullScreen={qrFullScreen}
+          onFullScreenChange={(value) => {
+            if (onQRFullScreenChange) {
+              onQRFullScreenChange(value);
+            }
+          }}
+        />
       </View>
     </View>
   );

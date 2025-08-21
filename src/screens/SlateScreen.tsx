@@ -1,3 +1,4 @@
+// SlateScreen.tsx
 // Last modified: 2025-08-18
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, Dimensions } from 'react-native';
@@ -9,6 +10,7 @@ import { TakeMode } from '../components/molecules/TakeBlock';
 import { SoundSyncMode } from '../components/molecules/StatusBlock';
 import Theme from '../styles/theme';
 import KeyboardInputManager from '@/components/atoms/KeyboardInputManager';
+import QRFullScreenOverlay from '../components/molecules/QRFullScreenOverlay';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -70,9 +72,21 @@ const SlateScreen: React.FC = () => {
   
   // Bottom section state - Camera
   const [cinematographerName, setCinematographerName] = useState('Andrew Lesnie');
-  const [lensInfo, setLensInfo] = useState('35mm Zeiss');
-  const [lutInfo, setLutInfo] = useState('Film Emulation');
+  const [lensInfo, setLensInfo] = useState('35mm T1.4');
+  const [lutInfo, setLutInfo] = useState('ARRI LOGC2VIDEO_709_V2');
   
+  // QR Code state
+  const [qrFullScreen, setQrFullScreen] = useState(false);
+
+  // QR Code handlers
+  const handleQRFullScreenShow = () => {
+    setQrFullScreen(true);
+  };
+
+  const handleQRFullScreenHide = () => {
+    setQrFullScreen(false);
+  };
+
   // Roll handlers
   const handleRollValueChange = (camIndex: number, value: number) => {
     const newValues = [...rollValues];
@@ -193,6 +207,11 @@ const SlateScreen: React.FC = () => {
         rollValues={rollValues}
         numCams={numCams}
         
+        // QR handlers
+        onQRFullScreenShow={handleQRFullScreenShow}
+        onQRFullScreenHide={handleQRFullScreenHide}
+        qrFullScreen={qrFullScreen}
+
         // Scene handlers
         onSceneIncrement={handleSceneIncrement}
         onSceneDecrement={handleSceneDecrement}
@@ -216,6 +235,13 @@ const SlateScreen: React.FC = () => {
         onDualModeChange={setSceneDualMode}
         onPrefixNumberChange={setScenePrefixNumber}
         onEditingPrefixChange={setSceneEditingPrefix}
+      />
+      
+      {/* QR Fullscreen Overlay - MUST be here, outside ScrollView */}
+      <QRFullScreenOverlay
+        isVisible={qrFullScreen}
+        slateId={slateId}
+        onClose={() => setQrFullScreen(false)}
       />
       
       <ScrollView 
@@ -288,6 +314,8 @@ const SlateScreen: React.FC = () => {
           onLensInfoChange={setLensInfo}
           onLutInfoChange={setLutInfo}
           slateId={slateId}
+          qrFullScreen={qrFullScreen}
+          onQRFullScreenChange={setQrFullScreen}
         />
         
       </ScrollView>

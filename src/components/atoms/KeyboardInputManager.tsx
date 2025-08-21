@@ -36,6 +36,10 @@ interface KeyboardInputManagerProps {
   onDualModeChange?: (enabled: boolean) => void;
   onPrefixNumberChange?: (value: number) => void;
   onEditingPrefixChange?: (editing: boolean) => void;
+  
+  // QR Code handlers
+  onQRFullScreenShow?: () => void;
+  onQRFullScreenHide?: () => void;
 }
 
 const KeyboardInputManager: React.FC<KeyboardInputManagerProps> = ({
@@ -61,6 +65,8 @@ const KeyboardInputManager: React.FC<KeyboardInputManagerProps> = ({
   onDualModeChange,
   onPrefixNumberChange,
   onEditingPrefixChange,
+  onQRFullScreenShow,
+  onQRFullScreenHide,
 }) => {
   const hiddenInputRef = useRef<TextInput>(null);
   const [inputValue, setInputValue] = useState('');
@@ -77,11 +83,21 @@ const KeyboardInputManager: React.FC<KeyboardInputManagerProps> = ({
   // Letter memory
   const [lastUsedLetter, setLastUsedLetter] = useState('A');
   
-  // Auto-focus on mount
+  // Auto-focus on mount and keep focus
   useEffect(() => {
-    setTimeout(() => {
-      hiddenInputRef.current?.focus();
-    }, 100);
+    const focusInput = () => {
+      if (hiddenInputRef.current) {
+        hiddenInputRef.current.focus();
+      }
+    };
+    
+    // Initial focus
+    setTimeout(focusInput, 100);
+    
+    // Keep focus by checking periodically
+    const interval = setInterval(focusInput, 1000);
+    
+    return () => clearInterval(interval);
   }, []);
   
   // Helper functions for scene letters
@@ -176,6 +192,19 @@ const KeyboardInputManager: React.FC<KeyboardInputManagerProps> = ({
     console.log('KeyboardInputManager - key pressed:', lastChar);
     
     switch(lastChar) {
+      // QR CODE CONTROLS - Button 4 sends '[' for show, ']' for hide
+      case '[':
+        onQRFullScreenShow?.();
+        console.log('QR fullscreen shown');
+        setInputValue('');
+        break;
+        
+      case ']':
+        onQRFullScreenHide?.();
+        console.log('QR fullscreen hidden');
+        setInputValue('');
+        break;
+        
       // ROLL CONTROLS (Encoder 1)
       case 'e':
         // Decrement roll number
@@ -386,6 +415,7 @@ const KeyboardInputManager: React.FC<KeyboardInputManagerProps> = ({
         width: 1,
         height: 1,
         opacity: 0,
+        zIndex: -1, // Put it behind everything
       }}
       value={inputValue}
       onChangeText={(text) => {
@@ -399,6 +429,8 @@ const KeyboardInputManager: React.FC<KeyboardInputManagerProps> = ({
       blurOnSubmit={false}
       caretHidden={true}
       selectTextOnFocus={false}
+      showSoftInputOnFocus={false}  // Prevents soft keyboard on Android
+      keyboardAppearance="dark"      // iOS - makes keyboard less obtrusive if it does show
     />
   );
 };

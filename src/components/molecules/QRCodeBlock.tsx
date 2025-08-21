@@ -1,6 +1,7 @@
+// QRCodeBlock.tsx
 // Last modified: 2025-08-18
 import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, Modal, Text, Dimensions } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Text, Dimensions } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 import Theme from '../../styles/theme';
 
@@ -9,13 +10,21 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 interface QRCodeBlockProps {
   data?: string;
   slateId: string;
+  isFullScreen?: boolean;
+  onFullScreenChange?: (value: boolean) => void;
 }
 
 const QRCodeBlock: React.FC<QRCodeBlockProps> = ({
   data,
   slateId,
+  isFullScreen: externalIsFullScreen,
+  onFullScreenChange,
 }) => {
-  const [isFullScreen, setIsFullScreen] = useState(false);
+  // Use internal state if no external control is provided
+  const [internalIsFullScreen, setInternalIsFullScreen] = useState(false);
+  
+  // Determine which state to use
+  const isFullScreen = externalIsFullScreen !== undefined ? externalIsFullScreen : internalIsFullScreen;
   
   // Generate the QR code data
   const qrData = data || `https://smarterslate.com/slate/${slateId}`;
@@ -24,16 +33,34 @@ const QRCodeBlock: React.FC<QRCodeBlockProps> = ({
   // The QR container is roughly 30% of screen width and 43% of screen height
   const containerWidth = SCREEN_WIDTH * 0.30;
   const containerHeight = SCREEN_HEIGHT * 0.43;
-  const qrSize = Math.min(containerWidth, containerHeight) * 0.9; // 60% of smallest dimension
+  const qrSize = Math.min(containerWidth, containerHeight) * 0.9; // 90% of smallest dimension
   
   // Full screen QR size
   const fullScreenQrSize = Math.min(SCREEN_WIDTH, SCREEN_HEIGHT) * 0.8;
   
+  const handleQRTouch = () => {
+    console.log('QR Code touched - showing fullscreen');
+    if (onFullScreenChange) {
+      onFullScreenChange(true);
+    } else {
+      setInternalIsFullScreen(true);
+    }
+  };
+  
+  const handleFullscreenClose = () => {
+    console.log('Fullscreen QR touched - closing');
+    if (onFullScreenChange) {
+      onFullScreenChange(false);
+    } else {
+      setInternalIsFullScreen(false);
+    }
+  };
+  
   return (
     <>
       <TouchableOpacity 
-        style={styles.container} 
-        onPress={() => setIsFullScreen(true)}
+        style={styles.container}
+        onPress={handleQRTouch}
         activeOpacity={0.8}
       >
         <View style={styles.qrWrapper}>
@@ -46,28 +73,26 @@ const QRCodeBlock: React.FC<QRCodeBlockProps> = ({
         </View>
       </TouchableOpacity>
       
-      <Modal
-        visible={isFullScreen}
-        animationType="fade"
-        transparent={false}
-        onRequestClose={() => setIsFullScreen(false)}
-      >
-        <TouchableOpacity 
-          style={styles.fullScreenContainer}
-          onPress={() => setIsFullScreen(false)}
-          activeOpacity={1}
-        >
-          <View style={styles.fullScreenContent}>
-            <QRCode
-              value={qrData}
-              size={fullScreenQrSize}
-              color={Theme.colors.text}
-              backgroundColor={Theme.colors.blockBackground}
-            />
-            <Text style={styles.fullScreenId}>{slateId}</Text>
-          </View>
-        </TouchableOpacity>
-      </Modal>
+      {/* Fullscreen overlay - using absolute positioning instead of Modal */}
+      {isFullScreen && (
+        <View style={styles.fullScreenOverlay}>
+          <TouchableOpacity 
+            style={styles.fullScreenContainer}
+            onPress={handleFullscreenClose}
+            activeOpacity={1}
+          >
+            <View style={styles.fullScreenContent}>
+              <QRCode
+                value={qrData}
+                size={fullScreenQrSize}
+                color={Theme.colors.text}
+                backgroundColor={Theme.colors.blockBackground}
+              />
+              <Text style={styles.fullScreenId}>{slateId}</Text>
+            </View>
+          </TouchableOpacity>
+        </View>
+      )}
     </>
   );
 };
@@ -82,6 +107,15 @@ const styles = StyleSheet.create({
   qrWrapper: {
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  fullScreenOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 9999,
+    elevation: 9999, // For Android
   },
   fullScreenContainer: {
     flex: 1,
