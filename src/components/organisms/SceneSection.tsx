@@ -8,7 +8,7 @@ import Theme from '../../styles/theme';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-interface TopSectionProps {
+interface SceneSectionProps {
   // Roll props
   rollValues?: number[];
   numCams?: number;
@@ -45,10 +45,10 @@ interface TopSectionProps {
 }
 
 /**
- * TopSection organism containing Roll, Scene, and Take blocks
+ * SceneSection organism containing Roll, Scene, and Take blocks
  * White background with rounded bottom-left corner
  */
-const TopSection: React.FC<TopSectionProps> = ({
+const SceneSection: React.FC<SceneSectionProps> = ({
   rollValues = [1, 1],
   numCams = 1,
   currentCamIndex = 0,
@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   rollBlockWrapper: {
-    flex: 0.35, // 30% width for Roll
+    flex: 0.345, // 30% width for Roll
     justifyContent: 'center',
     alignItems: 'stretch',
     position: 'relative',
@@ -194,4 +194,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default TopSection;
+export default SceneSection;

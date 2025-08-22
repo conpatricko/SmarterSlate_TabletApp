@@ -8,7 +8,7 @@ import Theme from '../../styles/theme';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-interface MiddleSectionProps {
+interface TimeSectionProps {
   frameRate?: number;
   soundSyncMode?: SoundSyncMode;
   isLocked?: boolean;
@@ -18,10 +18,10 @@ interface MiddleSectionProps {
 }
 
 /**
- * MiddleSection organism containing Date, Timecode, and Status blocks
+ * TimeSection organism containing Date, Timecode, and Status blocks
  * Takes up 10% of screen height
  */
-const MiddleSection: React.FC<MiddleSectionProps> = ({
+const TimeSection: React.FC<TimeSectionProps> = ({
   frameRate = 24,
   soundSyncMode = 'SYNC',
   isLocked = false,
@@ -102,4 +102,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default MiddleSection;
+export default TimeSection;

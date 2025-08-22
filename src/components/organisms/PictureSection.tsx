@@ -1,4 +1,4 @@
-// BottomSection.tsx
+// PictureSection.tsx
 // Last modified: 2025-08-18
 import React from 'react';
 import { View, StyleSheet, Dimensions } from 'react-native';
@@ -10,7 +10,7 @@ import Theme from '../../styles/theme';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-interface BottomSectionProps {
+interface PictureSectionProps {
   // Director props
   directorName?: string;
   intExt?: 'INT' | 'EXT' | 'INT/EXT';
@@ -36,10 +36,10 @@ interface BottomSectionProps {
 }
 
 /**
- * BottomSection organism containing Director, Camera, and QR Code blocks
+ * PictureSection organism containing Director, Camera, and QR Code blocks
  * Takes up remaining screen height (43% after Top 30%, Middle 12%, Production 15%)
  */
-const BottomSection: React.FC<BottomSectionProps> = ({
+const PictureSection: React.FC<PictureSectionProps> = ({
   directorName = 'Director Name',
   intExt = 'INT',
   dayNight = 'DAY',
@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
     height: SCREEN_HEIGHT * 0.43,
     backgroundColor: Theme.colors.background,
     flexDirection: 'row',
-    paddingLeft: SCREEN_WIDTH * 0.05, // Left padding for drawer space
+    paddingLeft: SCREEN_WIDTH * 0.03, // Left padding for drawer space
     paddingRight: 0, // Bleed to edge
     paddingTop: Theme.spacing.xxs, // Reduced from sm
     paddingBottom: Theme.spacing.lg, // Keep larger bottom padding for end of app
@@ -161,4 +161,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default BottomSection;
+export default PictureSection;

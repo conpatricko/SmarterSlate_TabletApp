@@ -1,7 +1,7 @@
 // KeyboardInputManager.tsx
 // Centralized keyboard input handler for the slate app
 import React, { useEffect, useRef, useState } from 'react';
-import { TextInput, View } from 'react-native';
+import { TextInput, View, Keyboard, Platform } from 'react-native';
 import { TakeMode } from '../molecules/TakeBlock';
 
 interface KeyboardInputManagerProps {
@@ -40,6 +40,9 @@ interface KeyboardInputManagerProps {
   // QR Code handlers
   onQRFullScreenShow?: () => void;
   onQRFullScreenHide?: () => void;
+  
+  // Expose refocus method
+  onRefocus?: (callback: () => void) => void;
 }
 
 const KeyboardInputManager: React.FC<KeyboardInputManagerProps> = ({
@@ -83,21 +86,41 @@ const KeyboardInputManager: React.FC<KeyboardInputManagerProps> = ({
   // Letter memory
   const [lastUsedLetter, setLastUsedLetter] = useState('A');
   
-  // Auto-focus on mount and keep focus
+  // Standard practice: Focus management with keyboard dismissal handling
   useEffect(() => {
-    const focusInput = () => {
+    // Dismiss any existing keyboard on mount
+    Keyboard.dismiss();
+    
+    // Focus the hidden input after a short delay
+    const focusTimer = setTimeout(() => {
       if (hiddenInputRef.current) {
         hiddenInputRef.current.focus();
       }
+    }, 100);
+    
+    // Periodic refocus to ensure keyboard input works after touch interactions
+    const refocusInterval = setInterval(() => {
+      if (hiddenInputRef.current && !hiddenInputRef.current.isFocused()) {
+        hiddenInputRef.current.focus();
+      }
+    }, 2000); // Check every 2 seconds
+    
+    // Listen for keyboard events (standard practice)
+    const keyboardDidHideListener = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+      () => {
+        // Refocus when keyboard hides (if it was shown accidentally)
+        if (hiddenInputRef.current) {
+          hiddenInputRef.current.focus();
+        }
+      }
+    );
+    
+    return () => {
+      clearTimeout(focusTimer);
+      clearInterval(refocusInterval);
+      keyboardDidHideListener.remove();
     };
-    
-    // Initial focus
-    setTimeout(focusInput, 100);
-    
-    // Keep focus by checking periodically
-    const interval = setInterval(focusInput, 1000);
-    
-    return () => clearInterval(interval);
   }, []);
   
   // Helper functions for scene letters
@@ -203,6 +226,12 @@ const KeyboardInputManager: React.FC<KeyboardInputManagerProps> = ({
         onQRFullScreenHide?.();
         console.log('QR fullscreen hidden');
         setInputValue('');
+        // Refocus after QR closes
+        setTimeout(() => {
+          if (hiddenInputRef.current) {
+            hiddenInputRef.current.focus();
+          }
+        }, 100);
         break;
         
       // ROLL CONTROLS (Encoder 1)
@@ -293,21 +322,32 @@ const KeyboardInputManager: React.FC<KeyboardInputManagerProps> = ({
         setInputValue('');
         break;
         
-      case 's':
-        if (dualMode) {
-          const newEditingPrefix = !editingPrefix;
-          setEditingPrefix(newEditingPrefix);
-          onEditingPrefixChange?.(newEditingPrefix);
-          console.log('Toggled edit position in dual mode');
-        } else {
-          const currentHundred = Math.floor(sceneNumber / 100);
-          const nextHundred = currentHundred >= 9 ? 1 : currentHundred + 1;
-          onSceneNumberChange(nextHundred * 100 + 1);
-          console.log(`Jumped to scene ${nextHundred * 100 + 1}`);
-        }
-        setInputValue('');
-        break;
-        
+        case 's':
+          if (dualMode) {
+            const newEditingPrefix = !editingPrefix;
+            setEditingPrefix(newEditingPrefix);
+            onEditingPrefixChange?.(newEditingPrefix);
+            console.log('Toggled edit position in dual mode');
+          } else {
+            const currentHundred = Math.floor(sceneNumber / 100);
+            let nextHundred;
+            
+            // Handle the sequence: 100, 200, 300, ..., 900, then back to 001 (0)
+            if (currentHundred >= 9) {
+              nextHundred = 0; // Go to 001
+            } else {
+              nextHundred = currentHundred + 1;
+            }
+            
+            // If going to 0, set to 1. Otherwise set to X01
+            const newSceneNumber = nextHundred === 0 ? 1 : (nextHundred * 100 + 1);
+            onSceneNumberChange(newSceneNumber);
+            console.log(`Jumped to scene ${newSceneNumber}`);
+          }
+          setInputValue('');
+          break;
+          
+      
       case 'S':
         const newDualMode = !dualMode;
         setDualMode(newDualMode);
@@ -410,12 +450,10 @@ const KeyboardInputManager: React.FC<KeyboardInputManagerProps> = ({
       ref={hiddenInputRef}
       style={{
         position: 'absolute',
-        left: -1000,
-        top: -1000,
+        left: -9999,
+        top: -9999,
         width: 1,
         height: 1,
-        opacity: 0,
-        zIndex: -1, // Put it behind everything
       }}
       value={inputValue}
       onChangeText={(text) => {
@@ -431,6 +469,8 @@ const KeyboardInputManager: React.FC<KeyboardInputManagerProps> = ({
       selectTextOnFocus={false}
       showSoftInputOnFocus={false}  // Prevents soft keyboard on Android
       keyboardAppearance="dark"      // iOS - makes keyboard less obtrusive if it does show
+      importantForAccessibility="no" // Standard practice for hidden inputs
+      accessible={false}
     />
   );
 };

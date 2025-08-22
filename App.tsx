@@ -29,9 +29,10 @@ SplashScreen.preventAutoHideAsync().catch(() => {
 // Custom Drawer Component
 interface CustomDrawerProps {
   children: React.ReactNode;
+  onDrawerOpen?: (openFn: () => void) => void; // Add callback to expose openDrawer
 }
 
-const CustomDrawer: React.FC<CustomDrawerProps> = ({ children }) => {
+const CustomDrawer: React.FC<CustomDrawerProps> = ({ children, onDrawerOpen }) => {
   const [isOpen, setIsOpen] = useState(false);
   const drawerAnimation = useRef(new Animated.Value(-DRAWER_WIDTH)).current;
   const overlayAnimation = useRef(new Animated.Value(0)).current;
@@ -51,6 +52,13 @@ const CustomDrawer: React.FC<CustomDrawerProps> = ({ children }) => {
       }),
     ]).start();
   };
+
+  // Expose openDrawer to parent component
+  useEffect(() => {
+    if (onDrawerOpen) {
+      onDrawerOpen(openDrawer);
+    }
+  }, []);
 
   const closeDrawer = () => {
     Animated.parallel([
@@ -73,13 +81,23 @@ const CustomDrawer: React.FC<CustomDrawerProps> = ({ children }) => {
     // Add navigation logic here when you implement the screens
   };
 
+  // Clone children and pass openDrawer as prop
+  const childrenWithProps = React.Children.map(children, child => {
+    if (React.isValidElement(child)) {
+      return React.cloneElement(child as React.ReactElement<any>, { 
+        onMenuPress: openDrawer 
+      });
+    }
+    return child;
+  });
+
   return (
     <View style={styles.container}>
       {/* Main Content */}
       <View style={styles.mainContent}>
-        {children}
+        {childrenWithProps}
         
-        {/* Invisible trigger area */}
+        {/* Invisible trigger area - keeping this as backup */}
         <TouchableOpacity
           style={styles.drawerTrigger}
           onPress={openDrawer}

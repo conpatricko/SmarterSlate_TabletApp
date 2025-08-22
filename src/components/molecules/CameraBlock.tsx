@@ -52,9 +52,10 @@ const CameraBlock: React.FC<CameraBlockProps> = ({
 
       {/* Camera Info - 30% height (further increased) */}
       <View style={styles.cameraInfoRow}>
+        {/* Lens - smaller flex for short text */}
         {editingLens ? (
           <TextInput
-            style={styles.cameraInfoInput}
+            style={[styles.cameraInfoInput, styles.lensInput]}
             value={lensInfo}
             onChangeText={onLensInfoChange}
             onBlur={() => setEditingLens(false)}
@@ -65,7 +66,7 @@ const CameraBlock: React.FC<CameraBlockProps> = ({
         ) : (
           <TouchableOpacity 
             onPress={() => setEditingLens(true)}
-            style={styles.cameraInfoTouchable}
+            style={styles.lensTouchable}
           >
             <Text style={styles.cameraInfoText} numberOfLines={1}>
               {lensInfo}
@@ -73,11 +74,10 @@ const CameraBlock: React.FC<CameraBlockProps> = ({
           </TouchableOpacity>
         )}
 
-        {/* No divider between lens and LUT */}
-
+        {/* LUT - larger flex for longer text */}
         {editingLut ? (
           <TextInput
-            style={styles.cameraInfoInput}
+            style={[styles.cameraInfoInput, styles.lutInput]}
             value={lutInfo}
             onChangeText={onLutInfoChange}
             onBlur={() => setEditingLut(false)}
@@ -88,9 +88,9 @@ const CameraBlock: React.FC<CameraBlockProps> = ({
         ) : (
           <TouchableOpacity 
             onPress={() => setEditingLut(true)}
-            style={styles.cameraInfoTouchable}
+            style={styles.lutTouchable}
           >
-            <Text style={styles.cameraInfoText} numberOfLines={1}>
+            <Text style={styles.cameraInfoText} numberOfLines={1} adjustsFontSizeToFit>
               {lutInfo}
             </Text>
           </TouchableOpacity>
@@ -132,11 +132,16 @@ const styles = StyleSheet.create({
   cameraInfoRow: {
     flex: 0.40, // Further increased for more space
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
+    paddingLeft: 0, // Remove left padding to maximize space
   },
-  cameraInfoTouchable: {
-    flex: 1,
-    paddingHorizontal: Theme.spacing.xs,
+  lensTouchable: {
+    flex: 0.3, // Only 30% width for lens (8-11 chars)
+    paddingRight: Theme.spacing.xxs, // Minimal padding between lens and LUT
+  },
+  lutTouchable: {
+    flex: 0.7, // 70% width for longer LUT names
+    paddingLeft: Theme.spacing.xxs, // Minimal padding between lens and LUT
   },
   cameraInfoText: {
     fontFamily: 'BigNoodleTitling',
@@ -145,14 +150,20 @@ const styles = StyleSheet.create({
     lineHeight: Theme.typography.fontSize.xxlarge * 1, // Tighter line height
   },
   cameraInfoInput: {
-    flex: 1,
     fontFamily: 'BigNoodleTitling',
     fontSize: Theme.typography.fontSize.xlarge,
     color: Theme.colors.secondaryColor,
     borderBottomWidth: Theme.borders.width.thin,
     borderBottomColor: Theme.colors.border,
     paddingVertical: 0,
-    paddingHorizontal: Theme.spacing.xs,
+  },
+  lensInput: {
+    flex: 0.3, // Match the touchable flex
+    paddingRight: Theme.spacing.xxs,
+  },
+  lutInput: {
+    flex: 0.7, // Match the touchable flex
+    paddingLeft: Theme.spacing.xxs,
   },
 });
 

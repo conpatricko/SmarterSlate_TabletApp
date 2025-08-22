@@ -1,18 +1,18 @@
 // SlateScreen.tsx
 // Last modified: 2025-08-18
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, Dimensions } from 'react-native';
-import TopSection from '../components/organisms/TopSection';
-import MiddleSection from '../components/organisms/MiddleSection';
+import { View, StyleSheet, ScrollView, Dimensions, TouchableOpacity, Image } from 'react-native';
+import TopSection from '../components/organisms/SceneSection';
+import TimeSection from '../components/organisms/TimeSection';
 import ProductionSection from '../components/organisms/ProductionSection';
-import BottomSection from '../components/organisms/BottomSection';
+import PictureSection from '../components/organisms/PictureSection';
 import { TakeMode } from '../components/molecules/TakeBlock';
 import { SoundSyncMode } from '../components/molecules/StatusBlock';
 import Theme from '../styles/theme';
 import KeyboardInputManager from '@/components/atoms/KeyboardInputManager';
 import QRFullScreenOverlay from '../components/molecules/QRFullScreenOverlay';
 
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
 
 // Helper function to generate slate ID - moved OUTSIDE and BEFORE the component
 const generateSlateId = (): string => {
@@ -28,7 +28,11 @@ const generateSlateId = (): string => {
  * Main Slate Screen
  * Container for all slate sections with black background
  */
-const SlateScreen: React.FC = () => {
+interface SlateScreenProps {
+  onMenuPress?: () => void;
+}
+
+const SlateScreen: React.FC<SlateScreenProps> = ({ onMenuPress }) => {
   const [slateId] = useState(() => generateSlateId());
 
   // Roll state
@@ -87,6 +91,15 @@ const SlateScreen: React.FC = () => {
     setQrFullScreen(false);
   };
 
+  // Menu handler
+  const handleMenuPress = () => {
+    console.log('Menu icon pressed');
+    // Call the prop function to open drawer
+    if (onMenuPress) {
+      onMenuPress();
+    }
+  };
+
   // Roll handlers
   const handleRollValueChange = (camIndex: number, value: number) => {
     const newValues = [...rollValues];
@@ -124,11 +137,29 @@ const SlateScreen: React.FC = () => {
 
   // Scene handlers
   const handleSceneIncrement = () => {
-    setSceneNumber((prev) => Math.min(999, prev + 1));
+    setSceneNumber((prev) => {
+      // If we're at 901, wrap to 001
+      if (prev === 901) {
+        return 1;
+      }
+      // If we're at 999, also wrap to 001
+      if (prev >= 999) {
+        return 1;
+      }
+      // Otherwise increment normally
+      return prev + 1;
+    });
   };
   
   const handleSceneDecrement = () => {
-    setSceneNumber((prev) => Math.max(1, prev - 1));
+    setSceneNumber((prev) => {
+      // If we're at 1, wrap to 901
+      if (prev <= 1) {
+        return 901;
+      }
+      // Otherwise decrement normally
+      return prev - 1;
+    });
   };
   
   const handleSceneNumberChange = (value: number) => {
@@ -210,7 +241,7 @@ const SlateScreen: React.FC = () => {
         // QR handlers
         onQRFullScreenShow={handleQRFullScreenShow}
         onQRFullScreenHide={handleQRFullScreenHide}
-        qrFullScreen={qrFullScreen}
+        // qrFullScreen={qrFullScreen}
 
         // Scene handlers
         onSceneIncrement={handleSceneIncrement}
@@ -243,6 +274,19 @@ const SlateScreen: React.FC = () => {
         slateId={slateId}
         onClose={() => setQrFullScreen(false)}
       />
+
+      {/* Menu Icon - positioned absolutely */}
+      <TouchableOpacity 
+        style={styles.drawerIcon}
+        onPress={handleMenuPress}
+        activeOpacity={0.7}
+      >
+        <Image
+          source={require('../../assets/images/arrow_menu_open_wght700gradN25_200px.png')}
+          style={styles.drawerIconImage}
+          resizeMode="contain"
+        />
+      </TouchableOpacity>
       
       <ScrollView 
         style={styles.scrollView}
@@ -278,7 +322,7 @@ const SlateScreen: React.FC = () => {
         />
         
         {/* Middle Section with Date, Timecode, Status */}
-        <MiddleSection
+        <TimeSection
           frameRate={frameRate}
           soundSyncMode={soundSyncMode}
           isLocked={isLocked}
@@ -298,7 +342,7 @@ const SlateScreen: React.FC = () => {
         />
         
         {/* Bottom Section with Director, Camera, QR */}
-        <BottomSection
+        <PictureSection
           directorName={directorName}
           intExt={intExt}
           dayNight={dayNight}
@@ -336,6 +380,21 @@ const styles = StyleSheet.create({
   },
   bottomPadding: {
     backgroundColor: 'transparent',
+  },
+  drawerIcon: {
+    position: 'absolute',
+    left: SCREEN_WIDTH * -0.003, // 1% from left edge
+    top: SCREEN_HEIGHT * 0.33, // 30% from top
+    width: 60, // Touch target size
+    height: 60,
+    zIndex: 1000, // Above everything else
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  drawerIconImage: {
+    width: 60, // Visual size of icon
+    height: 60,
+    tintColor: Theme.colors.blockBackground, // Make it white to match theme
   },
 });
 

@@ -1,7 +1,7 @@
 // QRCodeBlock.tsx
 // Last modified: 2025-08-18
 import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, Text, Dimensions } from 'react-native';
+import { View, StyleSheet, Pressable, Text, Dimensions } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 import Theme from '../../styles/theme';
 
@@ -30,10 +30,9 @@ const QRCodeBlock: React.FC<QRCodeBlockProps> = ({
   const qrData = data || `https://smarterslate.com/slate/${slateId}`;
   
   // Calculate QR code size based on container
-  // The QR container is roughly 30% of screen width and 43% of screen height
   const containerWidth = SCREEN_WIDTH * 0.30;
   const containerHeight = SCREEN_HEIGHT * 0.43;
-  const qrSize = Math.min(containerWidth, containerHeight) * 0.9; // 90% of smallest dimension
+  const qrSize = Math.min(containerWidth, containerHeight) * 0.9;
   
   // Full screen QR size
   const fullScreenQrSize = Math.min(SCREEN_WIDTH, SCREEN_HEIGHT) * 0.8;
@@ -58,12 +57,13 @@ const QRCodeBlock: React.FC<QRCodeBlockProps> = ({
   
   return (
     <>
-      <TouchableOpacity 
+      <Pressable 
         style={styles.container}
-        onPress={handleQRTouch}
-        activeOpacity={0.8}
+        onPressIn={handleQRTouch}
+        hitSlop={20}
+        delayLongPress={99999}
       >
-        <View style={styles.qrWrapper}>
+        <View style={styles.qrWrapper} pointerEvents="none">
           <QRCode
             value={qrData}
             size={qrSize}
@@ -71,17 +71,16 @@ const QRCodeBlock: React.FC<QRCodeBlockProps> = ({
             backgroundColor={Theme.colors.blockBackground}
           />
         </View>
-      </TouchableOpacity>
+      </Pressable>
       
-      {/* Fullscreen overlay - using absolute positioning instead of Modal */}
+      {/* Fullscreen overlay */}
       {isFullScreen && (
         <View style={styles.fullScreenOverlay}>
-          <TouchableOpacity 
+          <Pressable 
             style={styles.fullScreenContainer}
             onPress={handleFullscreenClose}
-            activeOpacity={1}
           >
-            <View style={styles.fullScreenContent}>
+            <View style={styles.fullScreenContent} pointerEvents="none">
               <QRCode
                 value={qrData}
                 size={fullScreenQrSize}
@@ -90,7 +89,7 @@ const QRCodeBlock: React.FC<QRCodeBlockProps> = ({
               />
               <Text style={styles.fullScreenId}>{slateId}</Text>
             </View>
-          </TouchableOpacity>
+          </Pressable>
         </View>
       )}
     </>
@@ -115,7 +114,7 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     zIndex: 9999,
-    elevation: 9999, // For Android
+    elevation: 9999,
   },
   fullScreenContainer: {
     flex: 1,
